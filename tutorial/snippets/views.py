@@ -1,10 +1,12 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
+from rest_framework import generics, permissions
 from .models import Snippet
-from .serializers import SnippetSerializer
+from .serializers import SnippetSerializer, UserSerializer
+from django.contrib.auth.models import User
 
 
 @csrf_exempt
@@ -13,6 +15,7 @@ def snippet_list(request):
     """
     List all code snippets, or create a new snippet.
     """
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     if request.method == 'GET':
         snippets = Snippet.objects.all()
         serializer = SnippetSerializer(snippets, many=True)
@@ -29,6 +32,7 @@ def snippet_list(request):
 @csrf_exempt
 @api_view(['GET', 'PUT', 'DELETE'])
 def snippet_detail(request, pk):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     """
     Retrieve, update or delete a code snippet.
     """
@@ -51,3 +55,18 @@ def snippet_detail(request, pk):
     elif request.method == 'DELETE':
         snippet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserCreate(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
